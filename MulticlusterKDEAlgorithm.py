@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.spatial.distance import cdist
 
-def multiclusterkde_artigo(X, alpha, nc=0, max_iterations=1000, tolerance=1e-2):
+def multiclusterkdealgorithm(X, alpha, nc=0, max_iterations=1000, tolerance=1e-2):
     n, m = X.shape  # n - number of observations, m - dimension of data
     dp = np.std(X, axis=0)  # standard deviation of data
 
