@@ -265,7 +265,6 @@ class IMCKDE:
        
         if metrica in ['precision', 'db', 'dunn', 'ch']:
 
-
             mapper = ClusterMapper(self.n_clusters)
             self.output_array = mapper.mapeamento_clusters(target, self.dataset, self.result)
 
