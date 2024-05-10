@@ -5,7 +5,7 @@ class ClusterMapper:
     def __init__(self, number_of_clusters):
         self.number_of_clusters = number_of_clusters
 
-    def mapeamento(self, centroide_rotulado, centroide_calculado):
+    def mapping_(self, centroide_rotulado, centroide_calculado):
         # Calculate the cost matrix
         cost_matrix = np.zeros((self.number_of_clusters, self.number_of_clusters))
         for i in range(self.number_of_clusters):
@@ -32,14 +32,14 @@ class ClusterMapper:
         
         return input_array
 
-    def mapeamento_clusters(self, target, dataset, resultado):
+    def mapping__clusters(self, target, dataset, resultado):
         n_clusters = len(np.unique(target))
         centroid_geo = {}
         for i in range(n_clusters):
             centroid_geo[i] = np.mean(dataset[np.where(target == i)], axis=0)
 
         centroides_multicluster = resultado[1]
-        row_ind, col_ind = self.mapeamento(np.array([value for key, value in centroid_geo.items()]), centroides_multicluster)
+        row_ind, col_ind = self.mapping_(np.array([value for key, value in centroid_geo.items()]), centroides_multicluster)
         mapping = {row_ind[i]: col_ind[i] for i in range(n_clusters)}
         input_array = np.array(resultado[0])
         return self.map_values(input_array, mapping)
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     result = (kmeans.labels_, kmeans.cluster_centers_,)
     print(result)
     mapper = ClusterMapper(n_clusters)
-    maps = mapper.mapeamento_clusters(target, dataset, result)
+    maps = mapper.mapping__clusters(target, dataset, result)
     print(maps)
 
     from sklearn.metrics import precision_score

@@ -1,39 +1,13 @@
 import math
 import time
 import numpy as np
-import pandas as pd
-import statistics
-import scipy
-from scipy.optimize import minimize_scalar
-from scipy.linalg import sqrtm
 from scipy.optimize import minimize
-from scipy.optimize import fsolve
 from sklearn.metrics import silhouette_score
-import random
-from sklearn.cluster import KMeans
-from sklearn.metrics.cluster import homogeneity_score
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-import matplotlib.pyplot as plt
-from sklearn.metrics.cluster import adjusted_rand_score
-from numba import jit
-from sklearn.metrics import mean_absolute_percentage_error
 from sklearn.metrics import precision_score
-from scipy.optimize import linear_sum_assignment
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import davies_bouldin_score
-import multiprocessing
 from sklearn.metrics.pairwise import euclidean_distances
 import numba
-import pickle
-from sklearn.metrics import pairwise_distances
-from joblib import Parallel, delayed
-from multiprocessing import Pool
-from functools import partial
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from sklearn.metrics import calinski_harabasz_score
-
-
 
 
 def dunn_index(labels, data):
@@ -81,173 +55,97 @@ def adam_optimizer(grad_func, x_init, learning_rate=0.001, beta1=0.9, beta2=0.99
     return x
 
 
-# m é o número de pontos; n é a dimensão;
-def distancia(dado, centro):
+# m is the number of points; n is the dimention.
+def distance(dado, centro):
   dists = (np.array(dado) - np.array(centro))**2
   return np.sqrt(dists.sum())
 
-def h(dados, alpha, m):
-  #m = dados.shape[0]
-  return 1.06*np.diag(np.std(np.transpose(dados), axis = 1))*m**(-1/alpha)
+def h(data, alpha, m):
+  return 1.06*np.diag(np.std(np.transpose(data), axis = 1))*m**(-1/alpha)
 
-def h_inversa(h_matrix):
+def h_inverse(h_matrix):
   return np.diag(1/(h_matrix.diagonal()))
 
-def f(x, dados, h_1, h_inv, m, n):
-  #h_1 = h(dados, alpha, m)
-  #m = dados.shape[0]
-  #n = dados.shape[1]
+def f(x, data, h_1, h_inv, m, n):
   return -((2*math.pi)**(-n/2))*(1/m)*(np.linalg.det(h_1))**(-1/2)* \
-        sum([math.exp(np.matmul((-1/2) * np.transpose((x - dados[i])),np.matmul(h_inv,(x - dados[i])))) for i in range(m)])
+        sum([math.exp(np.matmul((-1/2) * np.transpose((x - data[i])),np.matmul(h_inv,(x - data[i])))) for i in range(m)])
 
-def gradient(x, dados, h_1, h_inv, m, n):
-  #h_1 = h(dados, alpha, m)
-  #m = dados.shape[0]
-  #n = dados.shape[1]
+def gradient(x, data, h_1, h_inv, m, n):
   return -((2*math.pi)**(-n/2))*(1/m)*(np.linalg.det(h_1))**(-1/2)* \
-        sum([(-1)*np.matmul(h_inv, (x - dados[i]))*math.exp(np.matmul((-1/2) \
-            * np.transpose((x - dados[i])),np.matmul(h_inv,(x - dados[i])))) for i in range(m)])
+        sum([(-1)*np.matmul(h_inv, (x - data[i]))*math.exp(np.matmul((-1/2) \
+            * np.transpose((x - data[i])),np.matmul(h_inv,(x - data[i])))) for i in range(m)])
 
 
 def sigma(data, alpha, m):
     return np.sqrt(1.06 * m**(-1/alpha) * np.sum(np.std(data, axis=0)**2))
 
 
-
-def multicluster_single(adam, dados, n_clusters, alpha, multiplo):
-    centroides = []
-    dados_restantes = dados.copy()
+def improvedmulticlusterkde(adam, data, n_clusters, alpha, beta):
+    centroids = []
+    remaining_data = data.copy()
     i = 0
     lista_aux = []
-    m, n = dados.shape
+    m, n = data.shape
 
-    while (i < n_clusters and len(dados_restantes) != 0):    
-        initial_point = dados_restantes[0]
-        m, n = dados_restantes.shape  
-        h_matrix = h(dados_restantes, alpha, m)
-        hinversa = h_inversa(h_matrix)
-        gradiente_fun2 = lambda z: gradient(z, dados_restantes, h_1=h_matrix, h_inv = hinversa, m=m, n=n)
-        funcao = lambda y: f(y, dados = dados_restantes, h_1 = h_matrix, h_inv = hinversa, m=m, n=n) 
-        dp = sigma(dados_restantes, alpha, m)
+    while (i < n_clusters and len(remaining_data) != 0):    
+        initial_point = remaining_data[0]
+        m, n = remaining_data.shape  
+        h_matrix = h(remaining_data, alpha, m)
+        hinverse = h_inverse(h_matrix)
+        gradient_fun2 = lambda z: gradient(z, remaining_data, h_1=h_matrix, h_inv = hinverse, m=m, n=n)
+        funcao = lambda y: f(y, data = remaining_data, h_1 = h_matrix, h_inv = hinverse, m=m, n=n) 
+        dp = sigma(remaining_data, alpha, m)
 
         if adam:
             start_time = time.time()
-            x_maximo = adam_optimizer(grad_func = gradiente_fun2, x_init = initial_point)
+            x_maximum = adam_optimizer(grad_func = gradient_fun2, x_init = initial_point)
             end_time = time.time()
             
         else:
             start_time = time.time()
-            x_maximo = minimize(funcao, initial_point, method='BFGS', jac=gradiente_fun2).x
+            x_maximum = minimize(funcao, initial_point, method='BFGS', jac=gradient_fun2).x
             end_time = time.time()
         lista_aux.append((end_time-start_time))
-        x_maximo = np.round(x_maximo, 2)
-        dados_restantes = np.delete(dados_restantes, 0, axis = 0)
+        x_maximum = np.round(x_maximum, 2)
+        remaining_data = np.delete(remaining_data, 0, axis = 0)
 
-        if not any(np.array_equal(x_maximo, centroide) for centroide in centroides):          
+        if not any(np.array_equal(x_maximum, centroid) for centroid in centroids):          
             i += 1
-            threshold = dp * multiplo
+            threshold = dp * beta
 
-            dists = np.linalg.norm(dados_restantes - x_maximo, axis = 1)
+            dists = np.linalg.norm(remaining_data - x_maximum, axis = 1)
             mask = dists >= threshold
 
-            dados_restantes = dados_restantes[mask]
-            centroides.append(x_maximo)  
+            remaining_data = remaining_data[mask]
+            centroids.append(x_maximum)  
             
-    clusters_original = np.argmin(np.linalg.norm(dados[:, np.newaxis] - centroides, axis=2), axis=1) 
-    return clusters_original , centroides, lista_aux
+    clusters_original = np.argmin(np.linalg.norm(data[:, np.newaxis] - centroids, axis=2), axis=1) 
+    return clusters_original , centroids, lista_aux
 
 def funcao(args):
-    ponto_inicial, dados_restantes, funcao_kde, gradiente_fun2 = args
+    initial_point_, remaining_data, function_kde, gradient_fun2 = args
     
-    initial_point = ponto_inicial
-    minimizacao = minimize(funcao_kde, initial_point, method='BFGS', jac=gradiente_fun2)
-    x_maximo = np.round(minimizacao.x,2)
-    f_maxima = minimizacao.fun
+    initial_point = initial_point_
+    minimization_ = minimize(function_kde, initial_point, method='BFGS', jac=gradient_fun2)
+    x_maximum = np.round(minimization_.x,2)
+    f_maxima = minimization_.fun
     
-    return x_maximo, f_maxima
-
-def multicluster_parallel(adam, dados, n_clusters, alpha, multiplo, initializer):
-    np.random.seed(0) 
-    centroides = []
-    f_maximas = []
-    dados_restantes = dados.copy()
-    contador = 0   
-    #m, n = dados.shape
-    lista_aux = []
-    while (contador < n_clusters and len(dados_restantes) != 0):  
-        if initializer == 'kmeans':
-            points = KMeans(n_clusters=(n_clusters-len(centroides)), random_state = 0, n_init = 'auto').fit(dados_restantes).cluster_centers_
-        elif initializer == 'random':
-            points = dados_restantes[np.random.choice(dados_restantes.shape[0], size=(n_clusters-len(centroides)), replace=False), :]
-        else:
-            raise ValueError("Invalid initializer. Expected 'kmeans' or 'random'.")
-
-        m, n = dados_restantes.shape  
-        h_matrix = h(dados_restantes, alpha, m)
-        hinversa = h_inversa(h_matrix)
-        
-        gradiente_fun2 = partial(gradient, dados=dados_restantes, h_1=h_matrix, h_inv=hinversa, m=m, n=n)
-        funcao_kde = partial(f, dados = dados_restantes, h_1 = h_matrix, h_inv = hinversa, m=m, n=n)
-        
-        com = time.time()
-
-        with Pool(processes=n_clusters) as pool:
-            lista_x_maximos = pool.map(funcao, [(p, dados_restantes, funcao_kde, gradiente_fun2) for p in points])
-
-        fin = time.time()
-        lista_aux.append((fin-com))
-        
-        sub_arrays = points
-        for sub_array in sub_arrays:
-            indices = np.where(np.all(dados_restantes == sub_array, axis=1))
-            dados_restantes = np.delete(dados_restantes, indices, axis=0)
-        
-        for elemento in lista_x_maximos:
-            x_maximo = elemento[0]
-            f_maxima = elemento[1]
-
-            if not any(np.array_equal(x_maximo, centroide) for centroide in centroides):      
-                contador += 1              
-                dp = sigma(dados_restantes, alpha, m)
-                threshold = dp * multiplo
-                dists = np.linalg.norm(dados_restantes - x_maximo, axis = 1)
-                mask = dists >= threshold
-                dados_restantes = dados_restantes[mask]
-                centroides.append(x_maximo)
-                f_maximas.append(f_maxima)
-
-    
-    f_maximas,centroides = map(list, zip(*sorted(zip(f_maximas, centroides), key = lambda x: x[0])))
-    centroides = centroides[-n_clusters:]
-    f_maximas = f_maximas[-n_clusters:]
-                                   
-    clusters_original = np.argmin(np.linalg.norm(dados[:, np.newaxis] - centroides, axis=2), axis=1) 
-    return clusters_original , centroides, lista_aux
-
-
+    return x_maximum, f_maxima
 
 class IMCKDE:
-    def __init__(self, dataset, n_clusters, alpha=2, multiplo=1, paralelization = True, adam = False, initializer="kmeans"):
+    def __init__(self, dataset, n_clusters, alpha=2, beta=1, adam = False):
         self.dataset = dataset
-        #self.target = target
         self.alpha = alpha
-        self.multiplo = multiplo
-        self.initializer = initializer
+        self.beta = beta
         self.n_clusters = n_clusters
         self.result = None
         self.output_array = None
-        self.paralelization = paralelization
         self.adam = adam
         self.time = 0
 
     def predict(self):
-        if self.paralelization:
-            resultado = multicluster_parallel(adam = self.adam, dados = self.dataset, n_clusters = self.n_clusters, alpha = self.alpha, multiplo = self.multiplo, initializer = self.initializer)
-        else:
-            resultado = multicluster_single(adam = self.adam, dados = self.dataset, n_clusters=self.n_clusters, alpha = self.alpha, multiplo=self.multiplo)
-        
-        self.result = resultado
-
+        results = improvedmulticlusterkde(adam = self.adam, data = self.dataset, n_clusters=self.n_clusters, alpha = self.alpha, beta=self.beta)
+        self.result = results
         return self
 
     def centroids(self):
@@ -256,31 +154,28 @@ class IMCKDE:
     def clusters(self):
         return self.result[0]
     
-    def calcular_metricas(self, metrica, target = None):
+    def calcular_metricss(self, metrics, target = None):
 
         from assignment_problem import ClusterMapper
 
-        if metrica == 'silhueta':
+        if metrics == 'silhouette':
             return silhouette_score(self.dataset, self.result[0])
        
-        if metrica in ['precision', 'db', 'dunn', 'ch']:
+        if metrics in ['precision', 'db', 'dunn', 'ch']:
 
             mapper = ClusterMapper(self.n_clusters)
             self.output_array = mapper.mapeamento_clusters(target, self.dataset, self.result)
-
-            # self.output_array = mapeamento_clusters(target, self.n_clusters, self.dataset, self.result)
-            # print('self.output_array',self.output_array)
         
-        if metrica == 'precision':
+        if metrics == 'precision':
             return precision_score(target, self.output_array, average='weighted')
         
-        if metrica == 'db':
+        if metrics == 'db':
             return davies_bouldin_score(self.dataset, self.output_array)
         
-        if metrica == 'dunn':
+        if metrics == 'dunn':
             return dunn_index(self.output_array, self.dataset)
         
-        if metrica == 'ch':
+        if metrics == 'ch':
             return calinski_harabasz_score(self.dataset, self.output_array)
         
 
