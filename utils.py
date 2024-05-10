@@ -1,7 +1,7 @@
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 
-def plot_confusion_matrix(y_true, y_pred, labels):
+def plot_confusion_matrix(y_true, y_pred, labels, filename):
 
     cm = confusion_matrix(y_true, y_pred)
     disp = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=labels)
@@ -17,4 +17,7 @@ def plot_confusion_matrix(y_true, y_pred, labels):
             if isinstance(child, matplotlib.text.Text):
                 child.set_fontsize(20)  # Adjust fontsize as needed
 
+
+    # Save the figure
+    plt.savefig(filename, dpi=300, format='jpeg')
     plt.show()
