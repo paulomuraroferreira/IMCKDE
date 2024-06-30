@@ -67,7 +67,7 @@ Calculating the Silhouette Coefficient:
 ```python
 silhouette = imkde.metrics_calculation("silhouette", iris.target)
 
-print(f'\033[1m Silhouette Coefficient for the Iris dataset: \033[0m {silhouette:.3f}')
+print(f'Silhouette Coefficient for the Iris dataset: {silhouette:.3f}')
 ```
 
     **Silhouette Coefficient for the Iris dataset:** 0.528
@@ -80,7 +80,7 @@ the confusion matrix:
 ```python
 precision = imkde.metrics_calculation("precision", iris.target)
 
-print(f'\033[1m Precision for the Iris dataset: \033[0m {precision:.3f}')
+print(f'Precision for the Iris dataset: {precision:.3f}')
 ```
 
     **Precision for the Iris dataset:** 0.927
