@@ -52,9 +52,9 @@ print()
 print(f" Clustering points classification: \033[0m {imkde.clusters()}")
 ```
 
-    **Clustering centroids:** [array([5.02, 3.41, 1.48, 0.25]), array([5.74, 2.82, 4.19, 1.29]), array([6.63, 3.08, 5.51, 2.15])]
+    Clustering centroids: [array([5.02, 3.41, 1.48, 0.25]), array([5.74, 2.82, 4.19, 1.29]), array([6.63, 3.08, 5.51, 2.15])]
     
-    **Clustering points classification:** [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+    Clustering points classification: [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
      0 0 0 0 0 0 0 0 0 0 0 0 0 2 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
      1 1 2 2 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 1 2 2 2 2
      2 2 1 2 2 2 2 2 1 2 1 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2
@@ -70,7 +70,7 @@ silhouette = imkde.metrics_calculation("silhouette", iris.target)
 print(f'Silhouette Coefficient for the Iris dataset: {silhouette:.3f}')
 ```
 
-    **Silhouette Coefficient for the Iris dataset:** 0.528
+    Silhouette Coefficient for the Iris dataset: 0.528
 
 
 Since we have the original labels, let's calculate the precision and plot   
@@ -83,7 +83,7 @@ precision = imkde.metrics_calculation("precision", iris.target)
 print(f'Precision for the Iris dataset: {precision:.3f}')
 ```
 
-    **Precision for the Iris dataset:** 0.927
+    Precision for the Iris dataset: 0.927
 
 
 
