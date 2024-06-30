@@ -32,16 +32,16 @@ class ClusterMapper:
         
         return input_array
 
-    def mapping__clusters(self, target, dataset, resultado):
+    def mapping__clusters(self, target, dataset, result__):
         n_clusters = len(np.unique(target))
         centroid_geo = {}
         for i in range(n_clusters):
             centroid_geo[i] = np.mean(dataset[np.where(target == i)], axis=0)
 
-        centroides_multicluster = resultado[1]
+        centroides_multicluster = result__[1]
         row_ind, col_ind = self.mapping_(np.array([value for key, value in centroid_geo.items()]), centroides_multicluster)
         mapping = {row_ind[i]: col_ind[i] for i in range(n_clusters)}
-        input_array = np.array(resultado[0])
+        input_array = np.array(result__[0])
         return self.map_values(input_array, mapping)
 
     
